@@ -1,64 +1,90 @@
-import React from 'react'
-import Input from '@mui/joy/Input'
+import React, { useRef, useState } from 'react'
 
 import { FormContainer, FormInput } from './Form.styles.js'
 import { Box, Button } from '@mui/joy'
+import TextField from '@mui/material/TextField'
 import { DataGrid } from '@mui/x-data-grid'
 
 const columns = [
-    { field: 'id', headerName: 'ID', width: 90 },
+    // { field: 'id', headerName: 'ID', width: 90 },
     {
         field: 'Activity',
-        headerName: 'Activity',
-        width: 150,
+        headerName: 'activity',
+        width: 100,
         editable: true,
     },
     {
         field: 'Duration',
-        headerName: 'Duration',
-        width: 150,
+        headerName: 'duration',
+        width: 100,
         editable: true,
     },
     {
         field: 'Previous activity',
-        headerName: 'Previous activity',
-        type: 'number',
-        width: 110,
+        headerName: 'previousActivity',
+        width: 150,
         editable: true,
     },
     {
         field: 'Next activity',
-        headerName: 'Next activity',
-        type: 'number',
-        width: 110,
+        headerName: 'nextActivity',
+        width: 150,
         editable: true,
     },
 ]
 
-const rows = []
-
-const handleOnAdd = () => {}
-
 const Form = () => {
+    const activityRef = useRef('')
+    const durationRef = useRef('')
+    const previousRef = useRef('')
+    const nextRef = useRef('')
+
+    const [rows, updateRows] = useState([])
+
+    const handleOnAdd = () => {
+        const activity = activityRef.current.value
+        const duration = durationRef.current.value
+        const previousAct = previousRef.current.value
+        const nextAct = nextRef.current.value
+
+        const newRow = {
+            Activity: activity,
+            Duration: duration,
+            'Previous activity': previousAct,
+            'Next activity': nextAct,
+        }
+        const isUniq = rows.includes.call(newRow)
+        console.log(isUniq)
+
+        if (!isUniq) {
+            updateRows((rows) => [...rows, newRow])
+        }
+    }
+
     return (
         <FormContainer>
             <FormInput>
-                <Input
+                <TextField
                     sx={{ mr: 2 }}
+                    inputRef={activityRef}
                     type="text"
                     placeholder="Enter activity"
                 />
-                <Input
+
+                <TextField
+                    inputRef={durationRef}
                     sx={{ mr: 2 }}
                     type="text"
                     placeholder="Enter duration"
                 />
-                <Input
+                <TextField
+                    inputRef={previousRef}
                     sx={{ mr: 2 }}
                     type="text"
                     placeholder="Enter previous activity"
                 />
-                <Input
+                <TextField
+                    inputRef={nextRef}
                     sx={{ mr: 2 }}
                     type="text"
                     placeholder="Enter next activity"
@@ -76,6 +102,7 @@ const Form = () => {
                             },
                         },
                     }}
+                    getRowId={(row) => row.Activity}
                     pageSizeOptions={[5]}
                     checkboxSelection
                     disableRowSelectionOnClick

@@ -8,10 +8,10 @@ export const FormInput = styled.div`
     margin: 10px;
 
     button {
-        width: 5%;
+        width: 7%;
     }
 
     input {
-        width: 150px;
+        width: 180px;
     }
 `
