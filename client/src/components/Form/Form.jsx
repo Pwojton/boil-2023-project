@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react'
 
-import { FormContainer, FormInput } from './Form.styles.js'
+import { FormContainer, FormInput, GraphContainer } from './Form.styles.js'
 import { Box, Button } from '@mui/joy'
 import TextField from '@mui/material/TextField'
 import { DataGrid } from '@mui/x-data-grid'
 import { Task, calculateCPM } from '../../backend/CPMmethod.js'
+import { DataSet, Network } from 'vis-network/standalone'
 
 const columns = [
     {
@@ -60,9 +61,22 @@ const Form = () => {
 
     const getResult = () => {
         const tasks = []
+        const nodes = []
+        const edges = []
         rows.forEach((row) => {
             if (row.previousActivity === '') {
                 tasks.push(new Task(row.Activity, Number(row.Duration)))
+                nodes.push({ id: row.Activity, label: row.Activity })
+                edges.push({
+                    from: row.previousActivity,
+                    to: row.Activity,
+                    arrows: {
+                        to: {
+                            enabled: true,
+                            type: 'arrow',
+                        },
+                    },
+                })
                 return
             }
             tasks.push(
@@ -70,7 +84,31 @@ const Form = () => {
                     row.previousActivity,
                 ])
             )
+            nodes.push({ id: row.Activity, label: row.Activity })
+            edges.push({
+                from: row.previousActivity,
+                to: row.Activity,
+                arrows: {
+                    to: {
+                        enabled: true,
+                        type: 'arrow',
+                    },
+                },
+            })
         })
+
+        const nodesDataSet = new DataSet(nodes)
+        const edgesDataSet = new DataSet(edges)
+
+        const data = {
+            nodes: nodesDataSet,
+            edges: edgesDataSet,
+        }
+
+        const options = {}
+
+        const container = document.getElementById('mynetwork')
+        new Network(container, data, options)
 
         const result = calculateCPM(tasks)
         updateDuration(result.projectDuration)
@@ -123,6 +161,7 @@ const Form = () => {
             </Box>
             <Button onClick={getResult}>Get result</Button>
             <h1>Duration: {duration}</h1>
+            <GraphContainer id="mynetwork" />
         </FormContainer>
     )
 }

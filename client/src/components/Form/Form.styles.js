@@ -15,3 +15,10 @@ export const FormInput = styled.div`
         width: 180px;
     }
 `
+
+export const GraphContainer = styled.div`
+    border: 1px solid black;
+
+    height: 350px;
+    width: 700px;
+`
