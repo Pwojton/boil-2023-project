@@ -4,9 +4,9 @@ import { FormContainer, FormInput } from './Form.styles.js'
 import { Box, Button } from '@mui/joy'
 import TextField from '@mui/material/TextField'
 import { DataGrid } from '@mui/x-data-grid'
+import { Task, calculateCPM } from '../../backend/CPMmethod.js'
 
 const columns = [
-    // { field: 'id', headerName: 'ID', width: 90 },
     {
         field: 'Activity',
         headerName: 'activity',
@@ -20,14 +20,8 @@ const columns = [
         editable: true,
     },
     {
-        field: 'Previous activity',
-        headerName: 'previousActivity',
-        width: 150,
-        editable: true,
-    },
-    {
-        field: 'Next activity',
-        headerName: 'nextActivity',
+        field: 'previousActivity',
+        headerName: 'previous activity',
         width: 150,
         editable: true,
     },
@@ -37,28 +31,53 @@ const Form = () => {
     const activityRef = useRef('')
     const durationRef = useRef('')
     const previousRef = useRef('')
-    const nextRef = useRef('')
 
     const [rows, updateRows] = useState([])
+    const [duration, updateDuration] = useState(0)
+
+    const checkDupclicate = (newRow) => {
+        if (newRow.Activity === newRow.previousActivity) return false
+
+        return (
+            rows.find((row) => row.Activity === newRow.Activity) === undefined
+        )
+    }
 
     const handleOnAdd = () => {
         const activity = activityRef.current.value
         const duration = durationRef.current.value
         const previousAct = previousRef.current.value
-        const nextAct = nextRef.current.value
 
         const newRow = {
             Activity: activity,
             Duration: duration,
-            'Previous activity': previousAct,
-            'Next activity': nextAct,
+            previousActivity: previousAct,
         }
-        const isUniq = rows.includes.call(newRow)
-        console.log(isUniq)
-
-        if (!isUniq) {
+        if (checkDupclicate(newRow)) {
             updateRows((rows) => [...rows, newRow])
         }
+    }
+
+    const getResult = () => {
+        const tasks = []
+        rows.forEach((row) => {
+            if (row.previousActivity === '') {
+                tasks.push(new Task(row.Activity, Number(row.Duration)))
+                return
+            }
+            tasks.push(
+                new Task(row.Activity, Number(row.Duration), [
+                    row.previousActivity,
+                ])
+            )
+        })
+
+        const result = calculateCPM(tasks)
+        updateDuration(result.projectDuration)
+        console.log(
+            'Critical path:',
+            result.criticalPath.map((task) => task.id).join(' -> ')
+        )
     }
 
     return (
@@ -83,12 +102,6 @@ const Form = () => {
                     type="text"
                     placeholder="Enter previous activity"
                 />
-                <TextField
-                    inputRef={nextRef}
-                    sx={{ mr: 2 }}
-                    type="text"
-                    placeholder="Enter next activity"
-                />
                 <Button onClick={handleOnAdd}>Add</Button>
             </FormInput>
             <Box sx={{ height: 400, width: '100%' }}>
@@ -108,6 +121,8 @@ const Form = () => {
                     disableRowSelectionOnClick
                 />
             </Box>
+            <Button onClick={getResult}>Get result</Button>
+            <h1>Duration: {duration}</h1>
         </FormContainer>
     )
 }
