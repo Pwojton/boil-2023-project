@@ -49,10 +49,13 @@ const Form = () => {
         const duration = durationRef.current.value
         const previousAct = previousRef.current.value
 
+        const previousActArr = previousAct.split(', ')
+        console.log(previousActArr)
+
         const newRow = {
             Activity: activity,
             Duration: duration,
-            previousActivity: previousAct,
+            previousActivity: previousActArr,
         }
         if (checkDupclicate(newRow)) {
             updateRows((rows) => [...rows, newRow])
@@ -64,11 +67,11 @@ const Form = () => {
         const nodes = []
         const edges = []
         rows.forEach((row) => {
-            if (row.previousActivity === '') {
+            if (row.previousActivity[0] === '') {
                 tasks.push(new Task(row.Activity, Number(row.Duration)))
                 nodes.push({ id: row.Activity, label: row.Activity })
                 edges.push({
-                    from: row.previousActivity,
+                    from: row.previousActivity[0],
                     to: row.Activity,
                     arrows: {
                         to: {
@@ -80,20 +83,25 @@ const Form = () => {
                 return
             }
             tasks.push(
-                new Task(row.Activity, Number(row.Duration), [
-                    row.previousActivity,
-                ])
+                new Task(
+                    row.Activity,
+                    Number(row.Duration),
+                    row.previousActivity
+                )
             )
             nodes.push({ id: row.Activity, label: row.Activity })
-            edges.push({
-                from: row.previousActivity,
-                to: row.Activity,
-                arrows: {
-                    to: {
-                        enabled: true,
-                        type: 'arrow',
+
+            row.previousActivity.forEach((prev) => {
+                edges.push({
+                    from: prev,
+                    to: row.Activity,
+                    arrows: {
+                        to: {
+                            enabled: true,
+                            type: 'arrow',
+                        },
                     },
-                },
+                })
             })
         })
 
@@ -108,14 +116,20 @@ const Form = () => {
         const options = {}
 
         const container = document.getElementById('mynetwork')
-        new Network(container, data, options)
 
         const result = calculateCPM(tasks)
+
+        const critPath = result.criticalPath.map((task) => task.id)
+
+        edges.forEach((edge) => {
+            if (critPath.includes(edge.from) && critPath.includes(edge.to)) {
+                edge.color = 'red'
+            }
+        })
+
+        new Network(container, data, options)
+
         updateDuration(result.projectDuration)
-        console.log(
-            'Critical path:',
-            result.criticalPath.map((task) => task.id).join(' -> ')
-        )
     }
 
     return (
